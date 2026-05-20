@@ -31,9 +31,25 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="RAG project", lifespan=lifespan)
 
 
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+
 @app.get("/")
 def root():
     return {"status": "ok", "message": "Configuration OK: GEMINI_API_KEY is loaded."}
+
+
+@app.get("/test-gemini")
+def test_gemini():
+    import google.generativeai as genai
+
+    genai.configure(api_key=_require_gemini_api_key())
+    model = genai.GenerativeModel("gemini-2.0-flash")
+    prompt = "Explain what a large language model is in one paragraph."
+    response = model.generate_content(prompt)
+    return {"response": response.text}
 
 
 def main() -> None:

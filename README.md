@@ -4,35 +4,62 @@ This repository contains my Retrieval-Augmented Generation (RAG) project for the
 
 This project will be built incrementally each week.
 
-## This week's setup
+## Week 5 — Server-side Gemini call
+
+### Run and test
+
+From the project root with the venv activated:
+
+```bash
+uvicorn rag_app:app --reload
+```
+
+| Endpoint | Expected result |
+|----------|-----------------|
+| `GET /health` | `{"status": "ok"}` |
+| `GET /test-gemini` | `{"response": "<Gemini-generated paragraph>"}` |
+
+If `/test-gemini` fails, check `.env` for a valid `GEMINI_API_KEY`, confirm `pip install -r requirements.txt`, and read the server error (e.g. `API_KEY_INVALID` means the key is missing or placeholder).
+
+### What `/test-gemini` does
+
+`GET /test-gemini` sends a **hardcoded prompt** to Gemini and returns the model’s text in JSON. It does **not** accept user input, documents, chunking, embeddings, or retrieval—those come in later weeks.
+
+Example prompt: *“Explain what a large language model is in one paragraph.”*
+
+### Where the Gemini call lives
+
+All Week 5 Gemini logic is in **`test_gemini()`** in `rag_app.py`:
+
+1. `genai.configure(api_key=...)` using the existing `_require_gemini_api_key()` helper (key loaded from `.env` at startup).
+2. `genai.GenerativeModel("gemini-2.0-flash")` to create the model.
+3. `model.generate_content(prompt)` to send the prompt.
+4. `response.text` to read the reply, returned as `{"response": ...}`.
+
+The API key stays in **`.env`** on the server; clients never see it. This mirrors production GenAI apps: backend-only AI calls, controlled cost, and enforceable security—the same foundation RAG builds on.
+
+### What I learned from the Gemini documentation
+
+- The Python SDK uses **`GenerativeModel`** plus **`generate_content`**; the text answer is in **`response.text`**.
+- Official docs at [ai.google.dev](https://ai.google.dev) now emphasize the newer `google-genai` package; this course uses **`google-generativeai`** per `requirements.txt`.
+- Reading API docs (model names, request shape, error codes like invalid API key) is as important as writing the call.
+
+## Setup (all weeks)
 
 - **Python environment:** A local virtual environment (`venv/`) using **Python 3.10**, created in the project root. Dependencies are installed with `pip install -r requirements.txt`.
-- **Dependencies (`requirements.txt`):** `fastapi`, `uvicorn`, `python-dotenv`, and `google-generativeai` for a small web API and Gemini-related work later.
-- **Configuration:** A **`.env`** file in the project root holds secrets and config (for example **`GEMINI_API_KEY`**). Variables are loaded with `python-dotenv`. **`.env` is gitignored** so it is not committed.
+- **Dependencies (`requirements.txt`):** `fastapi`, `uvicorn`, `python-dotenv`, and `google-generativeai`.
+- **Configuration:** A **`.env`** file in the project root holds **`GEMINI_API_KEY`**. Variables are loaded with `python-dotenv`. **`.env` is gitignored`** so it is not committed.
 - **`.gitignore`:** Ignores virtualenv folders (`venv/`, `.venv/`), **`.env`**, Python bytecode caches (`__pycache__/`, `pycache/`), and common junk (e.g. `.DS_Store`).
-- **Repository:** Cloned from GitHub; local `main` was reconciled with `origin/main` when histories diverged (merge with unrelated histories where needed).
-- **Server (smoke test):** The app can be run with  
-  `uvicorn rag_app:app --reload`  
-  from the project root with the venv activated (default URL: http://127.0.0.1:8000/).
 
 ## Purpose of `rag_app.py`
 
-`rag_app.py` is the **application entry point** for this phase of the project. It does **not** implement RAG retrieval or generation yet.
-
-Right now it:
-
-1. **Loads environment variables** from the project root **`.env`** file.
-2. **Requires `GEMINI_API_KEY`** to be set and non-empty; if it is missing, the CLI exits with a clear error, and the FastAPI app fails startup with a clear error.
-3. Exposes a minimal **FastAPI** `app` (with a **lifespan** hook that runs the same key check on startup) and a **`GET /`** route that confirms configuration when the key is present.
-4. Supports a **CLI check** via `python rag_app.py`, which only verifies configuration and prints a success message.
-
-Later weeks can add document loading, embeddings, retrieval, and Gemini calls while keeping configuration in one place.
+`rag_app.py` is the application entry point. It loads `.env`, validates `GEMINI_API_KEY` on startup, exposes FastAPI routes (`/health`, `/`, `/test-gemini`), and keeps Gemini calls on the server.
 
 ## Questions / uncertainties
 
-- **`google-generativeai` deprecation:** Installing the package may warn that support is moving to a newer SDK (`google.genai`). I am still using `google-generativeai` as specified for the course until the curriculum or assignment explicitly switches.
-- **`GOOGLE_API_KEY` vs `GEMINI_API_KEY`:** The app currently **validates `GEMINI_API_KEY` only**. If the Gemini client expects `GOOGLE_API_KEY` in some examples, I may need to align naming or set both to the same value—TBD when RAG code is added.
-- **Python version:** The environment uses **3.10** on this machine because **3.12** was not installed without admin rights; I will move to 3.12 if the course requires it once it is available here.
+- **`google-generativeai` deprecation:** The package warns that support is moving to `google.genai`; I will switch when the course does.
+- **Model name:** Week 5 uses `gemini-2.0-flash`; if the API rejects that name for an account, I may need to try `gemini-1.5-flash` or another listed model.
+- **Python version:** Local env uses **3.10**; I will move to 3.12+ if the course requires it.
 
 ## Git commands used so far
 
