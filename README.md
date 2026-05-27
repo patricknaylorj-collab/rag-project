@@ -4,6 +4,45 @@ This repository contains my Retrieval-Augmented Generation (RAG) project for the
 
 This project will be built incrementally each week.
 
+## Week 6 — Multi-step Gemini execution
+
+### Multi-step flow
+
+`GET /test-gemini` now runs **two sequential Gemini calls** inside `test_gemini()` in `rag_app.py`:
+
+| Step | Responsibility | Returned to client? |
+|------|----------------|---------------------|
+| **1 — Outline** | Ask Gemini for a short bullet-point outline on what a large language model is | No (stored in `outline`, logged at INFO) |
+| **2 — Expand** | Ask Gemini to write one paragraph using **only** that outline | Yes — `{"response": "<paragraph>"}` |
+
+The output of Step 1 is passed into the Step 2 prompt, so the final paragraph depends on the earlier model output.
+
+### Why the steps are separated
+
+- **Control:** Each step has one job (structure first, prose second).
+- **Reuse:** The same pattern scales to RAG (retrieve → summarize), validation, and refinement later in the course.
+- **Server-side only:** Both calls and the intermediate outline stay on the backend; clients still see the same JSON shape as Week 5.
+
+### Run and test
+
+Same as Week 5:
+
+```bash
+uvicorn rag_app:app --reload
+```
+
+| Endpoint | Expected result |
+|----------|-----------------|
+| `GET /health` | `{"status": "ok"}` |
+| `GET /test-gemini` | `{"response": "<paragraph expanded from outline>"}` |
+
+On failure, the API returns a **generic** error message (no API key in the response). Check server logs for details.
+
+### Challenges / open questions
+
+- **Invalid API key in local `.env`:** If `/test-gemini` returns 502, replace `GEMINI_API_KEY` with a valid key from Google AI Studio.
+- **Latency:** Two calls take roughly twice as long as one; acceptable for this exercise, worth caching or streaming in production.
+
 ## Week 5 — Server-side Gemini call
 
 ### Run and test
