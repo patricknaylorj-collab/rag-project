@@ -4,6 +4,46 @@ This repository contains my Retrieval-Augmented Generation (RAG) project for the
 
 This project will be built incrementally each week.
 
+## Week 7 — Input/output validation and response review
+
+### Why input validation exists
+
+Before a user question reaches the AI model, `validate_user_input()` checks that it is not empty, is at least 5 characters, and is at most 500 characters. This rejects bad or unusable input **early**, saves API cost, and returns clear **400** errors without calling Gemini.
+
+### Why output validation exists
+
+AI models can return empty or very short responses. `validate_model_output()` checks the primary model’s answer before it is returned. If the response is empty or shorter than 10 characters, the API returns a **500** error instead of sending useless output to the user.
+
+### Why a second AI model reviews responses
+
+`POST /query` uses two Gemini calls:
+
+| Step | Responsibility |
+|------|----------------|
+| **1 — Primary** | Answer the user’s question |
+| **2 — Review** | Review and improve the answer if it is unclear, incomplete, or poorly written |
+
+This “model checks model” pattern is common in production GenAI systems: one model generates, another validates or refines before the user sees the result.
+
+### Run and test
+
+```bash
+uvicorn rag_app:app --reload
+```
+
+Open [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs), find **POST /query**, and try:
+
+```json
+{"question": "What is retrieval augmented generation?"}
+```
+
+Invalid inputs (e.g. `""` or `"hi"`) should return **400** with a clear error message and **must not** call the model.
+
+| Endpoint | Expected result |
+|----------|-----------------|
+| `GET /health` | `{"status": "ok"}` |
+| `POST /query` | `{"question": "...", "answer": "..."}` |
+
 ## Week 6 — Multi-step Gemini execution
 
 ### Multi-step flow
