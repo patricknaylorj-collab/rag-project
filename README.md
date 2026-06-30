@@ -103,7 +103,7 @@ The app opens in your browser at `http://localhost:8501`.
 Update this checklist as you complete each week's assignment.
 
 - [ ] Week 10 — Ran the starter app and explored the codebase
-- [ ] Week 11 — Implemented conversation context
+- [x] Week 11 — Implemented conversation context
 - [ ] Week 12 — Implemented input security
 - [ ] Week 13 — Implemented hallucination monitoring
 - [ ] Week 14 — Implemented filtering and fallbacks
@@ -140,49 +140,6 @@ This week, everything is already built. Your job is to run it, understand how th
 
 ### ✅ When done
 Check off **Week 10** in the Weekly Progress section above, then delete this entire Week 10 assignment section (from `## Assignment: Week 10` down to the next `---`).
-
----
-
----
-## Assignment: Week 11 — Conversation Context
-
-**Learning objective:** Understand how to give an LLM memory using in-context history.
-
-### Background
-
-LLMs have no memory between API calls. Every call starts completely fresh. This means if you ask "What is Python?" and then "Can you give an example?", the second call has no idea what "it" refers to.
-
-The solution used in every production chatbot is simple: before each API call, paste the recent conversation history directly into the prompt. The LLM "remembers" because *we tell it* what was said before. This is called **in-context memory**.
-
-### What to implement
-
-**File 1 — `conversation.py`**
-
-Implement `get_formatted_history()`. This method formats the stored messages as a plain-text block that can be pasted into a prompt. Read the TODO comment carefully — the format matters.
-
-**File 2 — `rag_pipeline.py`**
-
-Find the **Week 11 TODO** block inside `generate_answer()`. Replace the placeholder `history_section = ""` with logic that:
-1. Checks if `conversation_history` is not None and has messages
-2. Gets the formatted history with `conversation_history.get_formatted_history()`
-3. Sets `history_section` to `f"\nPrevious conversation:\n{history_text}\n"`
-
-Then find the second **Week 11 TODO** block (at the bottom of `run_rag()`). After the answer is generated, save the exchange:
-```python
-conversation_history.add_message("user", query)
-conversation_history.add_message("assistant", answer)
-```
-
-### How to test
-
-Run the app and try a two-part conversation:
-1. Ask: *"What is machine learning?"*
-2. Ask: *"What are some real-world examples of it?"*
-
-Without your implementation, the second answer will be generic. With it, the answer will reference machine learning specifically.
-
-### ✅ When done
-Check off **Week 11** in the Weekly Progress section above, then delete this entire Week 11 assignment section.
 
 ---
 
